@@ -1,0 +1,44 @@
+{
+  "tables": {
+    "recipes": {
+      "name": "Recettes",
+      "fields": [
+        "Nom",
+        "Photo",
+        "Préparation",
+        "Source",
+        "Saison",
+        "Usage",
+        "Recette pour",
+        "Actif",
+        "Composition JSON",
+        "Repas"
+      ]
+    },
+    "week_types": {
+      "name": "Types de semaine",
+      "fields": ["Nom", "Effectifs habituels JSON", "Notes", "Semaines"]
+    },
+    "weeks": {
+      "name": "Semaines",
+      "fields": ["Date de début", "Type de semaine", "Contexte", "Statut", "Notes", "Repas"]
+    },
+    "meals": {
+      "name": "Repas",
+      "fields": [
+        "Créneau",
+        "Date",
+        "Moment",
+        "Semaine",
+        "Nombre de personnes",
+        "Portions à préparer",
+        "Type de repas",
+        "Recette",
+        "Annulé",
+        "Notes",
+        "Consommation présumée",
+        "Date de consommation présumée"
+      ]
+    }
+  }
+}
