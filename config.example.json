@@ -1,0 +1,7 @@
+{
+  "language": "fr",
+  "timezone": "Europe/Paris",
+  "week_start_day": "friday",
+  "history_retention_months": 6,
+  "record_warning_threshold": 850
+}
