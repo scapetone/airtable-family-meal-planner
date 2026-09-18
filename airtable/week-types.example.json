@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Semaine classique",
+    "meals": [
+      { "day": 0, "moment": "Soir", "people": 4 },
+      { "day": 1, "moment": "Midi", "people": 4 },
+      { "day": 1, "moment": "Soir", "people": 4 },
+      { "day": 2, "moment": "Midi", "people": 4 },
+      { "day": 2, "moment": "Soir", "people": 4 },
+      { "day": 3, "moment": "Soir", "people": 4 },
+      { "day": 4, "moment": "Soir", "people": 4 }
+    ]
+  },
+  {
+    "name": "Semaine légère",
+    "meals": [
+      { "day": 0, "moment": "Soir", "people": 2 },
+      { "day": 1, "moment": "Soir", "people": 2 },
+      { "day": 2, "moment": "Soir", "people": 2 }
+    ]
+  }
+]
