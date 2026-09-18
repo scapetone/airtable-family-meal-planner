@@ -10,6 +10,7 @@
         "Saison",
         "Usage",
         "Recette pour",
+        "Temps total",
         "Actif",
         "Composition JSON",
         "Repas"
@@ -35,9 +36,7 @@
         "Type de repas",
         "Recette",
         "Annulé",
-        "Notes",
-        "Consommation présumée",
-        "Date de consommation présumée"
+        "Notes"
       ]
     }
   }
