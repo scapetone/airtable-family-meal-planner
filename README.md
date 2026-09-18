@@ -16,7 +16,7 @@ Ce dépôt est avant tout **une spécification réutilisable** : un modèle Airt
 
 Il ne contient pas une application web ni un programme à lancer.
 
-Dans l'usage de référence, **ChatGPT est l'application** : il discute avec l'utilisateur et lit/écrit dans Airtable via une connexion Airtable compatible.
+Dans l'usage de référence, **ChatGPT est l'application** : il discute avec l'utilisateur et lit/écrit dans Airtable via le connecteur/MCP Airtable auquel la base a été autorisée.
 
 Le projet n'est pas fondamentalement lié à ChatGPT. Un autre assistant peut reprendre le même modèle s'il est capable de lire cette documentation et d'accéder à Airtable via un connecteur, MCP ou une intégration équivalente.
 
