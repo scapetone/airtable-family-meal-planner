@@ -1,0 +1,16 @@
+{
+  "start_date": "2026-09-18",
+  "week_type": "Semaine classique",
+  "context": "Autre",
+  "status": "À préparer",
+  "meals": [
+    {
+      "date": "2026-09-18",
+      "moment": "Soir",
+      "people": 4,
+      "portions_to_prepare": 4,
+      "meal_type": "À cuisiner",
+      "recipe": "Poulet crémeux aux champignons"
+    }
+  ]
+}
