@@ -1,217 +1,181 @@
 # Family Meal Planner — Airtable + assistant IA
 
-Un système simple pour **préparer les menus de la semaine, capitaliser ses recettes et générer les courses**, sans construire une application complète.
+Un système pour **préparer les menus de la semaine, enrichir progressivement un catalogue de recettes et générer les courses**, avec Airtable comme mémoire et un assistant IA comme interface.
 
-L'idée est de faire d'Airtable la mémoire du foyer : les recettes, les semaines et les repas y sont stockés dans une structure claire. Un assistant IA peut ensuite lire cette base, proposer un menu cohérent, y ajouter de nouvelles recettes au fil du temps et calculer les quantités nécessaires pour les courses.
+Le scénario de référence est volontairement simple :
 
-Le projet est volontairement pensé pour rester léger : **Airtable peut être utilisé comme base sur son offre gratuite**, sans automatisations complexes ni multiplication des tables. La configuration de référence conserve un historique limité et prévoit une purge manuelle et sécurisée quand la base grossit.
+**une base Airtable vide + ChatGPT connecté à Airtable + ce dépôt GitHub.**
 
-> Ce dépôt ne contient aucune donnée familiale réelle. Les effectifs, rythmes de semaine, recettes et paramètres fournis sont des exemples à adapter.
+Vous créez une base Airtable vide, vous donnez à ChatGPT l'accès à cette base, puis vous lui partagez ce dépôt. ChatGPT lit le schéma documenté ici et peut construire les tables, ajouter les premiers modèles de semaine, puis gérer les menus au fil des conversations.
 
-## Le concept en une minute
+> Ce dépôt ne contient aucune donnée familiale réelle. Les effectifs, recettes et rythmes fournis sont uniquement des exemples.
 
-Au lieu de recommencer chaque semaine avec une liste de recettes dans un document ou dans sa tête, on construit progressivement une petite base de connaissances culinaire.
+## Ce que ce projet est — et n'est pas
 
-1. **Les recettes vivent dans Airtable.** Chaque recette contient ses portions, sa préparation et une liste d'ingrédients structurée.
-2. **Les types de semaine décrivent le rythme du foyer.** Par exemple : semaine classique, garde alternée, vacances, semaine très chargée, etc.
-3. **Une semaine réelle est créée à partir d'un type de semaine.** Les repas à prévoir et le nombre de personnes sont connus à l'avance, puis ajustés si nécessaire.
-4. **L'assistant propose le menu.** Il peut tenir compte des recettes actives, de la saison, du temps disponible et des repas récents.
-5. **Le menu validé est enregistré dans Airtable.** L'historique devient alors utile pour éviter de tourner en rond.
-6. **Les courses sont calculées à partir des recettes prévues.** Les quantités sont adaptées au nombre de portions à préparer et regroupées par ingrédient.
-7. **La base s'enrichit naturellement.** Quand vous partagez une nouvelle recette, l'assistant peut l'analyser, la structurer et l'ajouter à Airtable pour les prochaines semaines.
+Ce dépôt est avant tout **une spécification réutilisable** : un modèle Airtable, des règles métier et des instructions pour un assistant IA.
 
-En pratique, plus vous utilisez le système, plus il devient pertinent : votre catalogue de recettes grandit et l'historique aide à varier les menus.
+Il ne contient pas une application web ni un programme à lancer.
 
-## Pourquoi Airtable ?
+Dans l'usage de référence, **ChatGPT est l'application** : il discute avec l'utilisateur et lit/écrit dans Airtable via une connexion Airtable compatible.
 
-Airtable joue ici le rôle d'une petite base de données compréhensible par tout le monde. On peut consulter et modifier les recettes ou les menus directement dans une interface proche d'un tableur, tout en conservant des liens entre les données.
+Le projet n'est pas fondamentalement lié à ChatGPT. Un autre assistant peut reprendre le même modèle s'il est capable de lire cette documentation et d'accéder à Airtable via un connecteur, MCP ou une intégration équivalente.
 
-Le système de référence utilise seulement **quatre tables** :
+## L'expérience utilisateur
 
-- **Recettes** : ce que vous savez cuisiner.
-- **Types de semaine** : les rythmes habituels du foyer.
-- **Semaines** : les semaines réellement planifiées.
-- **Repas** : chaque créneau de repas prévu, avec son nombre de personnes et éventuellement sa recette.
+Une fois le système installé, l'usage ressemble à ceci :
 
-Cela suffit pour relier une recette à un repas, un repas à une semaine, calculer les courses et reconstituer l'historique.
+> « Prépare le menu de la semaine prochaine. »
 
-## Une base de recettes qui s'enrichit avec le temps
+L'assistant consulte les types de semaine, les recettes actives et l'historique récent. Il propose les repas correspondant réellement aux créneaux du foyer.
 
-La table `Recettes` n'est pas un catalogue figé à remplir intégralement avant de commencer.
+Vous pouvez répondre :
 
-Vous pouvez démarrer avec seulement quelques recettes familières. Ensuite, à chaque fois que vous découvrez une recette intéressante — site web, livre, recette familiale ou recette improvisée — vous pouvez demander à l'assistant de l'ajouter.
+> « Remplace le poisson du samedi. Dimanche midi on mange dehors. Et lundi fais quelque chose de rapide. »
 
-L'assistant peut notamment :
+L'assistant ajuste le menu. Rien n'est enregistré tant que vous ne validez pas.
 
-- vérifier si la recette existe déjà ;
-- extraire le nombre de portions ;
-- transformer les ingrédients en données structurées ;
-- conserver les quantités de la recette originale ;
-- estimer prudemment une quantité quand la source reste vague ;
-- classer les ingrédients par rayon pour les courses ;
-- enregistrer la préparation ;
-- proposer une saison et un usage, par exemple `Rapide`, `Quotidien` ou `Week-end`.
+> « OK, valide. »
 
-Le but est que **l'ajout d'une recette soit presque aussi simple que de la partager dans une conversation**.
+Les repas sont enregistrés dans Airtable.
 
-## Comment naît un menu de la semaine ?
+Vous pouvez ensuite demander :
 
-Un `Type de semaine` contient les créneaux qui nécessitent réellement un repas et leurs effectifs habituels.
+> « Fais-moi les courses. »
 
-Par exemple :
+Les ingrédients sont recalculés selon les portions à préparer, regroupés et classés par catégorie.
 
-```json
-{
-  "name": "Semaine classique",
-  "meals": [
-    { "day": 0, "moment": "Soir", "people": 4 },
-    { "day": 1, "moment": "Midi", "people": 4 },
-    { "day": 1, "moment": "Soir", "people": 4 },
-    { "day": 2, "moment": "Midi", "people": 4 }
-  ]
-}
-```
+Et lorsque vous trouvez une nouvelle recette :
 
-`day: 0` représente le premier jour de la semaine configurée. Le système n'impose donc pas que votre semaine culinaire commence le lundi.
+> « Ajoute cette recette pour une prochaine fois. »
 
-Quand vous préparez une nouvelle semaine, l'assistant peut :
+L'assistant extrait les portions, ingrédients et instructions, vérifie les doublons, puis enrichit la table `Recettes`. Cette nouvelle recette pourra être proposée les semaines suivantes.
 
-- partir du type de semaine correspondant ;
-- appliquer les exceptions de cette semaine ;
-- consulter les recettes disponibles ;
-- regarder ce qui a été mangé récemment ;
-- proposer un menu varié ;
-- modifier les propositions avec vous ;
-- enregistrer le résultat **uniquement après validation**.
+**Plus le système est utilisé, plus sa mémoire culinaire devient utile.**
 
-Cette dernière règle est importante : l'IA propose, mais la semaine réellement enregistrée reste sous votre contrôle.
+## Le modèle en quatre tables
 
-## Et les restes ?
+Le système de référence utilise seulement quatre tables Airtable :
 
-Le modèle distingue le nombre de personnes présentes du nombre de portions réellement cuisinées.
+- **Recettes** — le catalogue de plats et leurs ingrédients ;
+- **Types de semaine** — les rythmes habituels du foyer ;
+- **Semaines** — les semaines réellement planifiées ;
+- **Repas** — chaque créneau concret, avec son effectif et sa recette éventuelle.
 
-Vous pouvez par exemple cuisiner 6 portions pour 4 personnes et prévoir les 2 portions restantes pour un autre repas. Le repas `Restes` n'achète pas une deuxième fois les ingrédients.
+Cette structure suffit pour construire les menus, gérer les restes, retrouver l'historique et calculer les courses.
 
-C'est ce qui permet de planifier volontairement du surplus au lieu de traiter les restes comme un accident.
+Le schéma complet est décrit dans [`docs/airtable-schema.md`](docs/airtable-schema.md).
 
-## Générer la liste de courses
+## Installation recommandée avec ChatGPT
 
-Pour chaque repas à cuisiner, la quantité nécessaire est calculée ainsi :
+### 1. Créer une base Airtable vide
+
+Créez simplement une nouvelle base Airtable. Vous n'avez pas besoin de créer les tables vous-même.
+
+### 2. Connecter Airtable à ChatGPT
+
+Donnez à ChatGPT un accès en lecture et écriture à cette base via votre connexion Airtable.
+
+L'assistant doit pouvoir créer les tables et champs, puis lire et modifier leurs enregistrements.
+
+### 3. Partager ce dépôt à ChatGPT
+
+Donnez à ChatGPT l'URL de ce dépôt ou rendez ses fichiers accessibles dans votre projet/conversation.
+
+Demandez-lui ensuite de lire en priorité :
+
+- [`docs/airtable-schema.md`](docs/airtable-schema.md) ;
+- [`config.example.json`](config.example.json) ;
+- [`airtable/week-types.example.json`](airtable/week-types.example.json) ;
+- [`prompts/bootstrap-airtable.md`](prompts/bootstrap-airtable.md).
+
+### 4. Lancer le bootstrap
+
+Vous pouvez utiliser directement le prompt fourni dans [`prompts/bootstrap-airtable.md`](prompts/bootstrap-airtable.md).
+
+En résumé, vous demandez à l'assistant :
+
+> Lis la documentation de ce dépôt. Inspecte ma base Airtable vide, construis les quatre tables et leurs champs conformément au schéma, puis vérifie la structure créée. Ne crée pas d'autres tables ou automatisations.
+
+L'assistant construit alors la base au lieu de vous demander de reproduire le schéma manuellement.
+
+### 5. Personnaliser le foyer
+
+Adaptez le premier jour de votre semaine culinaire, vos types de semaine, les créneaux nécessaires, les effectifs habituels et éventuellement la durée d'historique souhaitée.
+
+Les exemples fournis ne sont pas des règles imposées.
+
+### 6. Ajouter quelques recettes
+
+Vous pouvez saisir quelques recettes manuellement, importer vos recettes existantes, ou simplement les donner à l'assistant une par une. Vous n'avez pas besoin de remplir un catalogue complet avant de commencer.
+
+### 7. Préparer la première semaine
+
+> Prépare ma prochaine semaine. Consulte les recettes disponibles et évite si possible celles mangées récemment. Ne l'enregistre pas avant que je valide.
+
+Un parcours détaillé est disponible dans [`docs/getting-started.md`](docs/getting-started.md).
+
+## Comment fonctionne une semaine ?
+
+Un `Type de semaine` décrit seulement les repas qui doivent réellement être prévus. `day: 0` représente le premier jour de la semaine culinaire configurée : le système n'impose donc pas le lundi.
+
+Quand une vraie semaine est créée, les effectifs du modèle sont copiés dans les repas. Les exceptions de cette semaine peuvent ensuite être appliquées sans modifier le modèle original.
+
+## Les recettes enrichissent la base au fil du temps
+
+Lorsqu'une recette est fournie à l'assistant, celui-ci peut vérifier les doublons, conserver sa source réelle, enregistrer ses portions, structurer ses ingrédients, conserver les quantités d'origine, enregistrer sa préparation et son temps total, signaler les estimations, proposer une saison et un usage, puis l'activer pour de futurs menus.
+
+Le but est que **l'ajout d'une recette soit presque aussi simple que de partager la recette dans la conversation**.
+
+## Restes et portions à préparer
+
+Le système distingue **Nombre de personnes** et **Portions à préparer**. On peut donc cuisiner 6 portions pour 4 personnes afin de prévoir 2 portions pour plus tard. Un repas de type `Restes` ne génère pas un deuxième achat.
+
+## Liste de courses
+
+Pour chaque repas à cuisiner :
 
 ```text
+quantité nécessaire =
 quantité de la recette
-× portions à préparer
-÷ nombre de portions de la recette d'origine
+× (portions à préparer si renseignées, sinon nombre de personnes)
+÷ nombre de portions de référence de la recette
 ```
 
-Les ingrédients identiques sont ensuite regroupés. Les unités simples peuvent être converties (`kg` / `g`, `l` / `cl` / `ml`) et la liste est organisée par catégories : fruits et légumes, boucherie, crèmerie, épicerie, etc.
+Les ingrédients communs sont regroupés, les unités simples compatibles sont converties et les produits déjà présents peuvent être retirés.
 
-Le système distingue autant que possible :
+## Pensé pour rester léger sur Airtable
 
-- la quantité réellement nécessaire pour cuisiner ;
-- la quantité pratique à acheter au magasin.
+Le projet évite volontairement de multiplier les tables et les lignes : quatre tables principales, pas de table permanente pour les courses, pas d'automatisation obligatoire et des ingrédients stockés en JSON.
 
-On peut ensuite retirer ce qui est déjà présent dans les placards.
+La configuration de référence propose **six mois d'historique actif** et un avertissement à **850 lignes**. Ce sont des choix prudents du projet, pas une description des limites commerciales actuelles d'Airtable.
 
-## Pensé pour Airtable gratuit
+Aucune purge ne doit être automatique : export, vérification, confirmation, puis suppression.
 
-Le projet évite volontairement une architecture qui consommerait beaucoup de lignes ou nécessiterait des fonctions avancées d'Airtable.
+## Configuration
 
-Quelques principes :
+Les paramètres génériques sont illustrés dans [`config.example.json`](config.example.json). Ils servent de référence à l'assistant ; aucun programme de ce dépôt ne les exécute automatiquement.
 
-- seulement quatre tables principales ;
-- pas de table supplémentaire pour chaque liste de courses ;
-- pas d'automatisation Airtable obligatoire ;
-- pas de duplication des ingrédients dans une table dédiée ;
-- les compositions de recettes et certains modèles sont stockés en JSON dans des champs texte ;
-- l'historique ancien peut être exporté puis purgé manuellement ;
-- un seuil d'alerte configurable peut signaler que la base commence à devenir trop volumineuse.
+## Documentation
 
-La configuration de référence prévoit environ **six mois d'historique actif** et un seuil d'avertissement à **850 lignes**. Ce nombre est un garde-fou du projet, pas une promesse sur les limites commerciales actuelles d'Airtable : vérifiez les limites de votre forfait et ajustez le seuil si nécessaire.
-
-Avant toute purge, le système doit toujours : exporter les anciens repas, vérifier que l'export est récupérable, demander une confirmation explicite, puis seulement supprimer les anciennes données concernées.
-
-## Ce qu'il faut pour l'utiliser
-
-La version la plus simple ne demande pas de développer une application.
-
-Il vous faut :
-
-1. un compte Airtable ;
-2. une base contenant les quatre tables décrites dans [`docs/airtable-schema.md`](docs/airtable-schema.md) ;
-3. quelques recettes de départ ;
-4. au moins un type de semaine ;
-5. un assistant IA capable de lire et d'écrire dans Airtable, ou votre propre intégration via l'API Airtable.
-
-Le prompt générique fourni dans [`prompts/assistant-instructions.md`](prompts/assistant-instructions.md) contient les règles métier principales.
-
-## Démarrage rapide
-
-### 1. Créer la base Airtable
-
-Créez les quatre tables décrites dans [`docs/airtable-schema.md`](docs/airtable-schema.md).
-
-### 2. Créer vos types de semaine
-
-Inspirez-vous de [`airtable/week-types.example.json`](airtable/week-types.example.json). Les effectifs et le premier jour de la semaine sont propres à chaque foyer.
-
-### 3. Ajouter quelques recettes
-
-Le format recommandé pour les ingrédients se trouve dans [`examples/recipe.example.json`](examples/recipe.example.json).
-
-### 4. Configurer l'assistant
-
-Adaptez [`prompts/assistant-instructions.md`](prompts/assistant-instructions.md) avec le nom ou l'identifiant de votre base et votre organisation de semaine.
-
-Ne versionnez jamais vos clés API ou identifiants privés. Le fichier [`.env.example`](.env.example) montre les variables qui peuvent rester locales.
-
-### 5. Préparer votre première semaine
-
-Demandez par exemple :
-
-> Prépare le menu de ma prochaine semaine classique. Regarde les recettes disponibles et évite si possible celles mangées récemment. Ne l'enregistre pas avant que je valide.
-
-Puis ajustez le menu en conversation et validez-le quand il vous convient.
-
-## Structure du dépôt
-
-```text
-.
-├── README.md
-├── LICENSE
-├── .env.example
-├── .gitignore
-├── airtable/
-│   ├── schema.example.json
-│   └── week-types.example.json
-├── docs/
-│   ├── airtable-schema.md
-│   ├── concepts.md
-│   ├── meal-planning-rules.md
-│   └── shopping-list-rules.md
-├── examples/
-│   ├── recipe.example.json
-│   └── week.example.json
-└── prompts/
-    └── assistant-instructions.md
-```
-
-## Ce dépôt est une spécification, pas une application imposée
-
-Le projet décrit surtout un **modèle de données et des règles métier**. Vous pouvez l'utiliser avec ChatGPT, un autre assistant, un script maison ou une petite application.
-
-Cette séparation est volontaire : Airtable reste lisible et utilisable directement, même si vous changez ensuite d'outil d'IA.
+- [`docs/getting-started.md`](docs/getting-started.md) — installation de bout en bout ;
+- [`docs/airtable-schema.md`](docs/airtable-schema.md) — structure précise des tables ;
+- [`docs/concepts.md`](docs/concepts.md) — concepts métier ;
+- [`docs/meal-planning-rules.md`](docs/meal-planning-rules.md) — règles de planification ;
+- [`docs/shopping-list-rules.md`](docs/shopping-list-rules.md) — calcul des courses ;
+- [`examples/example-session.md`](examples/example-session.md) — exemple d'utilisation ;
+- [`prompts/bootstrap-airtable.md`](prompts/bootstrap-airtable.md) — prompt pour construire une base vide ;
+- [`prompts/assistant-instructions.md`](prompts/assistant-instructions.md) — règles permanentes pour l'assistant.
 
 ## Principes du projet
 
 - L'utilisateur garde le dernier mot avant l'enregistrement d'un menu.
 - Une recette ne doit pas être dupliquée si elle existe déjà.
-- Les anciennes semaines ne doivent pas changer quand un modèle de semaine est modifié.
-- Les quantités de recettes restent rattachées à leur nombre de portions d'origine.
+- Les anciennes semaines ne changent pas quand un type de semaine est modifié.
+- Les quantités restent rattachées aux portions de la recette d'origine.
 - Les restes ne génèrent pas un deuxième achat.
-- Les estimations doivent être signalées comme telles.
+- Les estimations sont explicitement signalées.
 - Une purge d'historique n'est jamais automatique.
-- Les données privées du foyer ne doivent pas être publiées dans ce dépôt.
+- Les données privées d'un foyer ne doivent pas être publiées dans ce dépôt.
 
 ## Licence
 
